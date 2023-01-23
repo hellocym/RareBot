@@ -1,5 +1,8 @@
+import os.path
 import re
 import time
+import pandas
+import pandas as pd
 
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
@@ -11,12 +14,8 @@ class HardstyleRelease:
         self.release_url = 'https://releasehardstyle.nl/releases/'
         self.root_url = 'https://releasehardstyle.nl'
         self.headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36'}
-
-    def __str__(self):
-        releases = self.get_releases()
-        for i, release in enumerate(releases):
-            print(f'{i} : {release}')
-        return ''
+        self.init_csv()
+        self.get_releases()
 
     def get_releases(self):
         html = urlopen(self.release_url)
@@ -24,7 +23,7 @@ class HardstyleRelease:
         releases = soup.find_all('a', class_='releasetracker-list-entry-info-more-details')
         # 多线程获取专辑信息
         thread_list = []
-        for release in releases[0:1]:
+        for release in releases[:]:
             # print(release['href'])
             url = self.root_url + release['href']
             thread = Thread(target=self.get_release_info, args=(url,))
@@ -34,7 +33,12 @@ class HardstyleRelease:
 
         for t in thread_list:
             t.join()
-        #return releases
+
+        # csv去重
+        csv = pd.read_csv('release.csv')
+        df = pd.DataFrame(csv)
+        f = df.drop_duplicates()
+        f.to_csv('release.csv', index=None)
 
     def get_release_info(self, url):
         html = urlopen(url)
@@ -50,9 +54,17 @@ class HardstyleRelease:
             values.append(value[0])
         zipped = zip(keys, values)
         info_dict = dict(zipped)
-        print(info_dict)
+        self.csv_append(info_dict)
+
+    def init_csv(self):
+        if os.path.exists('release.csv'):
+            return
+        with open('release.csv', 'w', encoding='utf-8') as f:
+            f.write('Title,Label,Release date,Catalog ID\n')
+    def csv_append(self, info_dict):
+        df = pandas.DataFrame(info_dict, index=[0])
+        df.to_csv('release.csv', mode='a', header=False, index=False, encoding='utf-8')
 
 
 if __name__ == '__main__':
     r = HardstyleRelease()
-    r.get_releases()
