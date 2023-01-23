@@ -1,3 +1,4 @@
+import datetime
 import os.path
 import re
 import time
@@ -41,7 +42,10 @@ class HardstyleRelease:
         f.to_csv('release.csv', index=None)
 
     def get_release_info(self, url):
-        html = urlopen(url)
+        try:
+            html = urlopen(url)
+        except Exception as e:
+            print(f"Can't open {url}")
         soup = BeautifulSoup(html.read(), 'html.parser')
         release_info = soup.find('div', class_='releasetracker_details-info_container-inner')
         # 正则提取信息
@@ -54,6 +58,7 @@ class HardstyleRelease:
             values.append(value[0])
         zipped = zip(keys, values)
         info_dict = dict(zipped)
+        #info_dict['Release date'] = self.parse_date(info_dict['Release date'])
         self.csv_append(info_dict)
 
     def init_csv(self):
@@ -65,6 +70,24 @@ class HardstyleRelease:
         df = pandas.DataFrame(info_dict, index=[0])
         df.to_csv('release.csv', mode='a', header=False, index=False, encoding='utf-8')
 
+    # def parse_date(self, date):
+    #     # date = '10 Aug 1919'
+    #     return datetime.datetime.strptime(date, '%d %b %Y').strftime('%Y-%m-%d')
+
+    def query_releases(self, Type='date', timestamp=None, period=None):
+        if Type == 'period':
+            pass
+        elif Type == 'timestamp':
+            df = pd.read_csv('release.csv', parse_dates=['Release date'])
+            timestamp = pd.Timestamp(timestamp)
+            mask = (df['Release date'] == timestamp)
+            print(df[mask])
+
+    def get_releases_today(self):
+        today = datetime.datetime.now().date()
+        self.query_releases(Type='timestamp', timestamp=today)
+
 
 if __name__ == '__main__':
     r = HardstyleRelease()
+    r.get_releases_today()
