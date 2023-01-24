@@ -13,7 +13,7 @@ __plugin_usage__ = r"""
 
 示例：
 天气 下北泽
-小狐狸
+上海天气咋样
 """
 
 @on_command('weather', aliases=('天气', '天气预报', '查天气'))
