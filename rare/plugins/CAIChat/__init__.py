@@ -37,7 +37,7 @@ async def chat(session: CommandSession):
             while not id_:
                 id_ = (await session.aget(prompt='角色id不能为空，请重新输入')).strip()
         async with async_playwright() as playwright:
-            browser = await playwright.firefox.launch(headless=False)
+            browser = await playwright.firefox.launch(headless=True)
             context = await browser.new_context()
             page = await context.new_page()
             bot = CAIBot(page)
