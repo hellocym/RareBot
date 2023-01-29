@@ -48,7 +48,7 @@ async def chat(session: CommandSession):
             while True:
                 res = (await session.aget(prompt=res)).strip()
                 await bot.send_msg(res)
-                res = await bot.get_msg(sleep_time=20)
+                res = await bot.get_msg(sleep_time=10)
     else:
         if not id_:
             await session.send('请先设置角色id')
